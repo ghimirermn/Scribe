@@ -7,7 +7,7 @@ A single-file desktop app that turns any audio/video into text (or English) with
 
 | Light mode | Dark mode |
 |------------|-----------|
-| ![light](assets/lightmode_ss.png) | ![dark](assets/darkmode_ss.png) |
+| ![light](assets/lightmode_ss.PNG) | ![dark](assets/darkmode_ss.PNG) |
 
 
 ## Features
@@ -21,12 +21,13 @@ A single-file desktop app that turns any audio/video into text (or English) with
 - **Single file** – the whole app is `whisper_ui.py`, keep it anywhere you like  
 
 
-## Install in 30 seconds
+## Install/Run in 30 seconds
 
 1. **Python 3.8+** (3.11 recommended)  
 2. Clone or download this folder  
-3. `pip install -r requirements.txt`  
-4. Drop an audio/video file on the window and hit **Start Processing**
+3. `pip install -r requirements.txt`
+4. `python whisper_ui.py`
+5. Drop an audio/video file on the window and hit **Start Processing**
 
 That’s it—no Whisper knowledge required.
 
