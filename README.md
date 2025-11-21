@@ -12,7 +12,7 @@ A single-file desktop app that turns any audio/video into text (or English) with
 
 ## Features
 
-- **Whisper under the hood** – tiny → large-v2 models, auto-downloaded on first use  
+- **Faster Whisper under the hood** – tiny → large-v2 models, auto-downloaded on first use  
 - **Two modes** – transcribe in the original language or translate straight to english  
 - **GPU boost** – toggle CUDA if you have it, CPU if you don’t  
 - **Live progress** – watch the words appear as they’re recognised  
