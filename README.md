@@ -27,7 +27,7 @@ A single-file desktop app that turns any audio/video into text (or English) with
 
 The easiest way to use Scribe.
 
-**[Download Scribe.exe v1.0.0](https://github.com/ghimirermn/Scribe/releases/download/v1.0.0)**
+**[Download Scribe.exe v1.0.0](https://github.com/ghimirermn/Scribe/releases/tag/v1.0.0)**
 
 - Download `Scribe.exe`  
 - Run it — no installation, no Python  
