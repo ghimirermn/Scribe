@@ -94,7 +94,7 @@ class ScribeApp:
             border_radius=10,
             on_click=self.toggle_live_translation,
             animate=ft.Animation(300, "easeOut"),
-            tooltip="Use Microphone"
+            tooltip="Start Live Recording"
         )
 
         self.dd_model = ft.Dropdown(
@@ -256,7 +256,7 @@ class ScribeApp:
         
         self.mic_icon.name = ft.Icons.STOP_CIRCLE
         self.btn_mic.bgcolor = LIVE_COLOR
-        self.btn_mic.tooltip = "Stop Recording"
+        self.btn_mic.tooltip = "Stop Live Recording"
         
         self.btn_start.disabled = True
         self.file_card.disabled = True
