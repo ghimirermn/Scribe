@@ -4,6 +4,10 @@ import threading
 import json
 import datetime
 import os
+import sounddevice as sd
+import numpy as np
+import wave
+import tempfile
 
 LIGHT_PALETTE = {
     "bg": "#F2F4F6", "card": "#FFFFFF", "text": "#333333", "text_muted": "#999999",
@@ -19,6 +23,7 @@ ACCENT_COLOR = "#5D737E"
 STOP_COLOR = "#E57373"
 SUCCESS_COLOR = "#8DA399"
 BLOSSOM_PINK = "#FFB7C5"
+LIVE_COLOR = "#FF6B6B"
 
 COMMON_LANGUAGES = {
     "en": "English", "zh": "Chinese", "es": "Spanish", "fr": "French", 
@@ -44,6 +49,12 @@ class ScribeApp:
         self.stop_event = threading.Event()
         self.processing = False
 
+        self.is_recording = False
+        self.audio_data = []
+        self.sample_rate = 16000
+        self.recording_stream = None
+        self.live_model = None        
+
         self._init_components()
         self._apply_theme()
 
@@ -61,6 +72,7 @@ class ScribeApp:
         self.page.overlay.append(self.file_picker)
         
         self.path_text = ft.Text("No file selected", color=LIGHT_PALETTE["text_muted"])
+
         self.file_card = ft.Container(
             content=ft.Row(
                 [ft.Icon(ft.Icons.AUDIO_FILE, color=ACCENT_COLOR), self.path_text],
@@ -68,8 +80,21 @@ class ScribeApp:
             ),
             padding=15,
             border_radius=10,
+            expand=True, 
             on_click=lambda _: self.file_picker.pick_files(allow_multiple=False),
-            animate=ft.Animation(300, "easeOut")
+            animate=ft.Animation(300, "easeOut"),
+            tooltip="Click to select audio file"
+        )
+
+        self.mic_icon = ft.Icon(ft.Icons.MIC, color="white")
+        self.btn_mic = ft.Container(
+            content=self.mic_icon,
+            bgcolor=ACCENT_COLOR,
+            padding=15,
+            border_radius=10,
+            on_click=self.toggle_live_translation,
+            animate=ft.Animation(300, "easeOut"),
+            tooltip="Use Microphone"
         )
 
         self.dd_model = ft.Dropdown(
@@ -149,7 +174,11 @@ class ScribeApp:
                     self.theme_icon
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 ft.Divider(height=15, color="transparent"),
-                self.file_card,
+                ft.Row([
+                    self.file_card,
+                    ft.Container(width=10),
+                    self.btn_mic
+                ], spacing=0),
                 ft.Divider(height=15, color="transparent"),
                 self.settings_box,
                 ft.Divider(height=15, color="transparent"),
@@ -212,6 +241,131 @@ class ScribeApp:
             self.current_segments = []
             self.btn_save.disabled = True
             self._apply_theme() 
+
+    def toggle_live_translation(self, e):
+        if not self.is_recording:
+            self.start_live_recording()
+        else:
+            self.stop_live_recording()
+
+    def start_live_recording(self):
+        self.is_recording = True
+        self.audio_data = []
+        self.current_segments = []
+        self.result_area.value = ""
+        
+        self.mic_icon.name = ft.Icons.STOP_CIRCLE
+        self.btn_mic.bgcolor = LIVE_COLOR
+        self.btn_mic.tooltip = "Stop Recording"
+        
+        self.btn_start.disabled = True
+        self.file_card.disabled = True
+        self.dd_model.disabled = True  # Add this
+        self.dd_mode.disabled = True   # Add this
+        self.switch_gpu.disabled = True
+
+        self.status_text.value = "Recording... Speak now!"
+        self.status_text.color = LIVE_COLOR
+        self.page.update()
+        
+        threading.Thread(target=self._record_audio, daemon=True).start()
+
+    def _record_audio(self):
+        try:
+            if self.live_model is None:
+                self.status_text.value = "Loading model for live translation..."
+                self.page.update()
+                
+                model_size = self.dd_model.value
+                device = "cuda" if self.switch_gpu.value else "cpu"
+                model_path = download_model(model_size)
+                self.live_model = WhisperModel(model_path, device=device, compute_type="int8")
+                
+                self.status_text.value = "Model loaded! Recording..."
+                self.status_text.color = LIVE_COLOR
+                self.page.update()
+            
+            chunk_duration = 5  
+            
+            while self.is_recording:
+                recording = sd.rec(
+                    int(chunk_duration * self.sample_rate),
+                    samplerate=self.sample_rate,
+                    channels=1,
+                    dtype=np.int16
+                )
+                sd.wait()
+                
+                if not self.is_recording:
+                    break
+                
+                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
+                with wave.open(temp_file.name, 'wb') as wf:
+                    wf.setnchannels(1)
+                    wf.setsampwidth(2)
+                    wf.setframerate(self.sample_rate)
+                    wf.writeframes(recording.tobytes())
+                
+                try:
+                    task_type = self.dd_mode.value
+                    segments, info = self.live_model.transcribe(
+                        temp_file.name,
+                        beam_size=5,
+                        task=task_type
+                    )
+                    
+                    for segment in segments:
+                        text = segment.text.strip()
+                        if text:
+                            self.result_area.value += text + " "
+                            self.page.update()
+                    
+                except Exception as e:
+                    print(f"Transcription error: {e}")
+                
+                try:
+                    os.unlink(temp_file.name)
+                except:
+                    pass
+                    
+        except Exception as e:
+            self.status_text.value = f"Recording error: {str(e)}"
+            self.status_text.color = STOP_COLOR
+            self.is_recording = False
+            
+            self.mic_icon.name = ft.Icons.MIC
+            self.btn_mic.bgcolor = ACCENT_COLOR
+            self.btn_mic.tooltip = "Use Microphone"
+            self.btn_start.disabled = False
+            self.file_card.disabled = False
+            self.page.update()
+
+    def close_live_model(self):
+        if self.live_model is not None:
+            #the object releases the file handles / GPU context.
+            del self.live_model
+            self.live_model = None
+
+    def stop_live_recording(self):
+        self.is_recording = False
+        self.close_live_model()  #to release the resources
+
+        self.mic_icon.name = ft.Icons.MIC
+        self.btn_mic.bgcolor = ACCENT_COLOR
+        self.btn_mic.tooltip = "Use Microphone"
+        
+        self.btn_start.disabled = False
+        self.file_card.disabled = False
+        self.dd_model.disabled = False      
+        self.dd_mode.disabled = False    
+        self.switch_gpu.disabled = False
+        self.status_text.value = "Recording stopped."
+        self.status_text.color = SUCCESS_COLOR
+        
+        if self.result_area.value.strip():
+            self.btn_save.disabled = False
+        
+        self.page.update()
 
     def run_transcription(self, e):
         if not self.selected_file:
