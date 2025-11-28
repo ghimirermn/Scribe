@@ -1,6 +1,6 @@
 # Scribe – a tiny, friendly faster whisper GUI
 
-A single-file desktop app that turns any audio/video into text (or English) with a click.
+A single-file desktop app that turns any audio/video — or your microphone — into text (or English) with a click.
 
 [![Download](https://img.shields.io/badge/Download-.exe-00A1F7?style=flat&logo=windows)](https://github.com/ghimirermn/Scribe/releases/download/v1.0.0/Scribe.exe) 
 
@@ -19,9 +19,23 @@ A single-file desktop app that turns any audio/video into text (or English) with
 - **Two modes** – transcribe in the original language or translate straight to english  
 - **GPU boost** – toggle CUDA if you have it, CPU if you don’t  
 - **Live progress** – watch the words appear as they’re recognised  
+- **Live Recording** – record directly from your microphone and transcribe instantly
 - **Export** – save as plain text, SRT subtitles, or full JSON with timestamps  
 - **Dark / light** – one-click toggle, remembers your mood  
 - **Single file** – the whole app is `whisper_ui.py` (or grab the ready-made .exe)
+
+## Live Recording (Real-Time)
+
+Scribe now supports **true live transcription** directly from your microphone:
+
+- Click **Start Live Recording** to begin  
+- Speech is transcribed **as you talk**, with words appearing in real time (looped on 5 seconds)
+- No need to stop the recording to see results  
+- Toggle **Stop Live Recording** anytime to end the session  
+- Works with any default system microphone  
+- Uses the same Whisper model you select for file transcription  
+
+Perfect for meetings, dictation, brainstorming, and hands-free note taking.
 
 ## Download the Windows .exe (No Python required)
 
