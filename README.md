@@ -10,7 +10,7 @@ A single-file desktop app that turns any audio/video into text (or English) with
 
 | Light mode | Dark mode |
 |------------|-----------|
-| ![light](assets/lightmode_ss.PNG) | ![dark](assets/darkmode_ss.PNG) |
+| ![light](assets/lightmode_mike_ss.PNG) | ![dark](assets/darkmode_mike_ss.PNG) |
 
 
 ## Features
